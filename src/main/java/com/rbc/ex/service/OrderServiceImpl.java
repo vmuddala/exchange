@@ -50,9 +50,11 @@ public class OrderServiceImpl implements OrderService {
         BigDecimal tq = BigDecimal.ZERO;
         BigDecimal tqp = BigDecimal.ZERO;
         for(ExecutedOrder exOrder: orderDao.getExecutedOrders()) {
-            BigDecimal orderQty = new BigDecimal(exOrder.getLatestOrder().getQuantity());
-            tqp = tqp.add(exOrder.getExePrice().multiply(orderQty));
-            tq = tq.add(orderQty);
+            if(exOrder.getLatestOrder().getRic().equalsIgnoreCase(ric)) {
+                BigDecimal orderQty = new BigDecimal(exOrder.getLatestOrder().getQuantity());
+                tqp = tqp.add(exOrder.getExePrice().multiply(orderQty));
+                tq = tq.add(orderQty);
+            }
         }
         if(tq.compareTo(BigDecimal.ZERO) != 0) {
             return tqp.divide(tq, 4, BigDecimal.ROUND_DOWN);
