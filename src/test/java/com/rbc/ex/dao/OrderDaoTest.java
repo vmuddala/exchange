@@ -13,6 +13,7 @@ import java.util.Set;
 import static com.rbc.ex.model.BuySellIndicator.BUY;
 import static com.rbc.ex.model.BuySellIndicator.SELL;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -64,9 +65,13 @@ public class OrderDaoTest extends BaseTestOrder {
     }
 
     @Test
-    public void shouldReturnEmptyListWhenNoExecutionsExisted() {
+    public void shouldAddToExecutionsSuccessfully(){
+        Order matching = createOrder(RIC, BUY);
+        Order order = createOrder(RIC, BUY);
+        orderDao.addToExecutedOrders(new ExecutedOrder(matching, order, order.getPrice()));
         List<ExecutedOrder> executedOrders = orderDao.getExecutedOrders();
-        assertTrue(executedOrders.isEmpty());
+        assertFalse(executedOrders.isEmpty());
+        assertEquals(order.getPrice(), executedOrders.get(0).getExePrice());
     }
 
     private void assertAddedOrders(Order order) {

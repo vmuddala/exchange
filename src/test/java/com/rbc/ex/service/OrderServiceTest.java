@@ -48,21 +48,19 @@ public class OrderServiceTest extends BaseTestOrder {
     }
 
     @Test
-    public void shouldRemoveFromOpenOrdersAndAddToExecutedOrdersWhenMatchFound(){
+    public void shouldRemoveFromOpenOrdersAndAddToExecutedOrdersWhenMatchFoundForSellOrder(){
         //Given
         Order order = createOrder(RIC, SELL);
-        Set<Order> existingOpenOrders = new HashSet<>();
         Order existingOrder = createOrder(RIC, BUY);
-        existingOpenOrders.add(existingOrder);
-        when(orderDao.getOppDirecOpenOrdersByRicAndOppDirection(RIC, order.getDirection())).thenReturn(Optional.of(existingOpenOrders));
-        ExecutedOrder executedOrder = new ExecutedOrder(existingOrder, order, order.getPrice());
-        orderDao.addToExecutedOrders(executedOrder);
-        //When
-        orderService.addOrder(order);
-        //Then
-        verify(orderDao).getOppDirecOpenOrdersByRicAndOppDirection(RIC, order.getDirection());
-        verify(orderDao).removeOpenOrder(existingOrder);
-        verify(orderDao).addToExecutedOrders(executedOrder);
+        processAndVerifyOrders(order, existingOrder);
+    }
+
+    @Test
+    public void shouldRemoveFromOpenOrdersAndAddToExecutedOrdersWhenMatchFoundForBuyOrder(){
+        //Given
+        Order order = createOrder(RIC, BUY);
+        Order existingOrder = createOrder(RIC, SELL);
+        processAndVerifyOrders(order, existingOrder);
     }
 
     @Test
@@ -94,6 +92,17 @@ public class OrderServiceTest extends BaseTestOrder {
     }
 
     @Test
+    public void shouldReturnZeroAsAvgExecutionPriceForTheGivenRicWhenNoExecutionsAreExisted() {
+        //Given
+        when(orderDao.getExecutedOrders()).thenReturn(Collections.emptyList());
+        //When
+        BigDecimal avgExecutionPrice = orderService.getAvgExecutionPrice(RIC);
+        //Then
+        verify(orderDao).getExecutedOrders();
+        assertEquals(BigDecimal.ZERO, avgExecutionPrice);
+    }
+
+    @Test
     public void shouldReturnExecutedQuantityForTheGivenRicAndDirections() {
         //Given
         Order order = createOrder(RIC, SELL);
@@ -105,6 +114,21 @@ public class OrderServiceTest extends BaseTestOrder {
         //Then
         verify(orderDao).getExecutedOrders();
         assertEquals(0L, executedQuantity);
+    }
+
+    private void processAndVerifyOrders(Order order, Order existingOrder) {
+        Set<Order> existingOpenOrders = new HashSet<>();
+        existingOpenOrders.add(existingOrder);
+        when(orderDao.getOppDirecOpenOrdersByRicAndOppDirection(RIC, order.getDirection())).thenReturn(Optional.of(existingOpenOrders));
+        ExecutedOrder executedOrder = new ExecutedOrder(existingOrder, order, order.getPrice());
+        orderDao.addToExecutedOrders(executedOrder);
+        //When
+        orderService.addOrder(order);
+        //Then
+        verify(orderDao).getOppDirecOpenOrdersByRicAndOppDirection(RIC, order.getDirection());
+        verify(orderDao).removeOpenOrder(existingOrder);
+        verify(orderDao).addToExecutedOrders(executedOrder);
+
     }
 
 }
